@@ -1,0 +1,35 @@
+### Extracting Seasonality (gamma) Component of Triple Exponential MA ###
+
+rm(list = ls())
+temps <- read.table('temps.txt', stringsAsFactors = FALSE, header = TRUE)
+
+#tranform table into a list of values (including year values)
+long_list <- as.vector(unlist(temps[,2:21]))
+plot(long_list)
+
+#turn list of values into years of timeseries data using frequency value
+temps_timeseries <- ts(long_list, start=1996, frequency=123)
+
+#plot time cycles
+plot(temps_timeseries, ylim = c(50,105))
+
+#breaks timeseries raw data into trend, seasonality, and random noise
+#gives us a thought of what we are working with and the cycles/smoothing neccesary
+plot(decompose(temps_timeseries))
+
+#triple exponential smoothing with all three variables (level,trend,seasonality)
+holt_temps <- HoltWinters(temps_timeseries, alpha= NULL, beta = NULL, gamma = NULL, seasonal = 'multiplicative')
+holt_temps
+#sum of squares error from predicted to raw points
+#fitted prediction gets better and better over the years and the variance corrects itself
+holt_temps$SSE
+plot(holt_temps)
+
+#export seasonality values to conduct CUSUM
+holt_temps_smoothed <- matrix(holt_temps$fitted[,4], nrow=123)
+write.csv(holt_temps_smoothed, file = "temp1.csv", fileEncoding = "UTF-16LE")
+
+### created many visuals and understood seasonality element of Holts-Winter Exponential Smoothing ###
+### could predict in the short term using exponential smoothing and used CUSUM equation and 
+seasonality values in Excel to find change detection of summer ending in Atlanta using 
+temperature data ###
